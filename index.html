@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" id="rootElement">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Glucose Pro - Personal Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- GOOGLE ADSENSE CODE GOES HERE -->
+    <!-- After you get approved, paste your <script> tag right here -->
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap');
+        :root { font-size: 16px; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f1f5f9;
+            color: #0f172a;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: font-size 0.2s ease-out;
+        }
+        .app-container { max-width: 500px; margin: 0 auto; }
+        .bg-low { background-color: #dc2626; } 
+        .bg-normal { background-color: #2563eb; } 
+        .bg-borderline { background-color: #65a30d; } 
+        .bg-high { background-color: #0891b2; } 
+        .bg-dangerous { background-color: #ea580c; } 
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .dyn-xs { font-size: 0.75rem; }
+        .dyn-sm { font-size: 0.875rem; }
+        .dyn-base { font-size: 1rem; }
+        .dyn-lg { font-size: 1.125rem; }
+        .dyn-xl { font-size: 1.25rem; }
+        .dyn-2xl { font-size: 1.5rem; }
+        .dyn-huge { font-size: 3.5rem; }
+        .ad-container {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1rem;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="pb-12">
+    <div class="app-container p-4 space-y-6">
+        
+        <!-- Ad Slot 1 (Top) -->
+        <div class="ad-container">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-PLACEHOLDER"
+                 data-ad-slot="TOP_SLOT"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="type" class="w-4 h-4 text-slate-400"></i>
+                    <span class="dyn-xs font-black uppercase tracking-widest text-slate-500">Accessibility: Text Size</span>
+                </div>
+                <span id="fontSizeDisplay" class="dyn-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">100%</span>
+            </div>
+            <input type="range" id="fontSlider" min="12" max="32" value="16" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+        </div>
+
+        <header class="flex items-center justify-between pt-2 px-2">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-slate-900 rounded-2xl shadow-lg">
+                    <i data-lucide="activity" class="w-7 h-7 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="dyn-2xl font-black tracking-tight leading-none text-slate-900 uppercase">Glucose Pro</h1>
+                    <p class="dyn-xs font-bold text-slate-500 uppercase tracking-widest">Global Monitor</p>
+                </div>
+            </div>
+            <button id="swapBtn" class="bg-blue-600 text-white px-4 py-3 rounded-2xl active:scale-95 transition-all shadow-lg flex items-center gap-2">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                <span class="font-black dyn-xs uppercase">Swap Unit</span>
+            </button>
+        </header>
+
+        <section class="bg-white rounded-[2.5rem] shadow-xl border-2 border-slate-200 overflow-hidden">
+            <div class="p-6 space-y-5">
+                <div>
+                    <label id="unitTypeLabel" class="dyn-xs font-black text-slate-500 uppercase tracking-widest ml-4">Current Reading (mmol/L)</label>
+                    <div class="mt-2 relative rounded-[2rem] bg-slate-50 border-4 border-slate-200 focus-within:border-blue-600 transition-all flex items-center">
+                        <input id="glucoseInput" type="number" inputmode="decimal" placeholder="0.0" class="block w-full dyn-huge font-black text-slate-900 p-6 bg-transparent outline-none" />
+                        <span id="activeUnitSuffix" class="pr-8 font-black text-slate-300 dyn-lg uppercase">mmol</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 p-8 rounded-[2.5rem] text-center border-4 border-white shadow-2xl relative">
+                    <p class="dyn-xs font-black uppercase tracking-[0.3em] text-blue-400 mb-2">Equivalent To</p>
+                    <div class="flex items-baseline justify-center gap-2">
+                        <span id="convertedVal" class="dyn-huge font-black text-white tracking-tighter leading-none">--</span>
+                        <span id="convertedUnit" class="dyn-lg font-bold text-slate-500 uppercase tracking-widest">mg/dL</span>
+                    </div>
+                    <div id="statusBadge" class="mt-6 inline-block px-10 py-3.5 rounded-full font-black dyn-lg uppercase tracking-widest border-4 opacity-0 transition-all duration-300 scale-90">
+                        <span id="statusLabel">Normal</span>
+                    </div>
+                </div>
+
+                <div class="space-y-4 px-2 border-t pt-5 border-slate-100">
+                    <div class="flex justify-between items-center">
+                        <span class="dyn-xs font-black text-slate-500 uppercase tracking-tighter">Safety Spectrum</span>
+                        <span id="needleValue" class="dyn-xs font-black text-white bg-slate-900 px-3 py-1 rounded-full opacity-0 transition-opacity">-- mmol/L</span>
+                    </div>
+                    <div class="relative h-12 w-full rounded-2xl overflow-hidden flex border-2 border-slate-200 shadow-inner">
+                        <div class="h-full bg-low" style="width: 15%" title="Low"></div>
+                        <div class="h-full bg-normal" style="width: 15%" title="Normal"></div>
+                        <div class="h-full bg-borderline" style="width: 20%" title="Borderline"></div>
+                        <div class="h-full bg-high" style="width: 20%" title="High"></div>
+                        <div class="h-full bg-dangerous" style="width: 30%" title="Danger"></div>
+                        <div id="needle" class="absolute top-0 bottom-0 w-4 bg-white shadow-lg transition-all duration-500 z-10 border-2 border-black rounded-sm opacity-0" style="left: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ad Slot 2 (Middle) -->
+        <div class="ad-container">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-PLACEHOLDER"
+                 data-ad-slot="MID_SLOT"
+                 data-ad-format="rectangle"
+                 data-full-width-responsive="true"></ins>
+        </div>
+
+        <section class="bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden border-4 border-slate-900">
+            <div class="px-6 py-4 flex justify-between items-center bg-slate-800">
+                <h2 class="text-white dyn-xs font-black uppercase tracking-widest italic">Manual Reference</h2>
+            </div>
+            <div class="grid grid-cols-3 gap-[2px] bg-slate-900 text-center">
+                <div class="flex flex-col dyn-sm font-black">
+                    <div class="py-2 bg-slate-700 dyn-xs text-white uppercase italic">Normal</div>
+                    <div onclick="setManual(5.5)" class="bg-blue-100 text-blue-900 py-4 cursor-pointer active:opacity-50">5.5 | 100</div>
+                    <div onclick="setManual(7.0)" class="bg-blue-200 text-blue-900 py-4 cursor-pointer active:opacity-50 border-t border-blue-300">7.0 | 126</div>
+                </div>
+                <div class="flex flex-col dyn-sm font-black">
+                    <div class="py-2 bg-slate-700 dyn-xs text-white uppercase italic">High</div>
+                    <div onclick="setManual(10.0)" class="bg-green-100 text-green-900 py-4 cursor-pointer active:opacity-50">10.0 | 180</div>
+                    <div onclick="setManual(11.1)" class="bg-cyan-100 text-cyan-900 py-4 cursor-pointer active:opacity-50 border-t border-cyan-300">11.1 | 200</div>
+                </div>
+                <div class="flex flex-col dyn-sm font-black">
+                    <div class="py-2 bg-slate-700 dyn-xs text-white uppercase italic">Danger</div>
+                    <div onclick="setManual(16.6)" class="bg-orange-100 text-orange-900 py-4 cursor-pointer active:opacity-50">16.6 | 300</div>
+                    <div onclick="setManual(33.3)" class="bg-red-100 text-red-900 py-4 cursor-pointer active:opacity-50 border-t border-red-300">33.3 | 600</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="bg-blue-600 p-6 rounded-3xl flex items-start gap-4 shadow-xl text-white">
+            <div class="p-3 bg-white/20 rounded-2xl">
+                <i data-lucide="smartphone" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <p class="dyn-sm font-black uppercase">Install as Mobile App</p>
+                <p class="dyn-xs text-white/80 mt-1">Visit this URL on your phone, tap the browser's <b>Share</b> menu, then select <b>"Add to Home Screen"</b>.</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <button id="downloadBtn" class="bg-white p-5 rounded-3xl border-2 border-slate-200 shadow-md active:scale-95 transition-all flex flex-col items-center gap-2">
+                <i data-lucide="download" class="w-6 h-6 text-slate-600"></i>
+                <span class="dyn-xs font-black text-slate-500 uppercase">Save File</span>
+            </button>
+            <button id="shareBtn" class="bg-white p-5 rounded-3xl border-2 border-slate-200 shadow-md active:scale-95 transition-all flex flex-col items-center gap-2 text-blue-600">
+                <i data-lucide="share-2" class="w-6 h-6"></i>
+                <span class="dyn-xs font-black uppercase">Share Link</span>
+            </button>
+        </div>
+
+        <footer class="text-center pt-2 space-y-2">
+            <p class="dyn-xs font-black text-slate-400 uppercase tracking-[0.2em]">Glucose Pro Premium v1.5</p>
+            <p class="text-[10px] text-slate-400 px-4">Disclaimer: This tool is for educational purposes. Consult a medical professional for health advice.</p>
+        </footer>
+    </div>
+
+    <script>
+        (adsbygoogle = window.adsbygoogle || []).push({}); // Initialize ads
+        let mode = 'mmol'; 
+        const FACTOR = 18.018;
+
+        const fontSlider = document.getElementById('fontSlider');
+        const fontDisplay = document.getElementById('fontSizeDisplay');
+        const input = document.getElementById('glucoseInput');
+        const unitTypeLabel = document.getElementById('unitTypeLabel');
+        const activeUnitSuffix = document.getElementById('activeUnitSuffix');
+        const convVal = document.getElementById('convertedVal');
+        const convUnit = document.getElementById('convertedUnit');
+        const statusBadge = document.getElementById('statusBadge');
+        const statusLabel = document.getElementById('statusLabel');
+        const needle = document.getElementById('needle');
+        const needleValueDisplay = document.getElementById('needleValue');
+
+        fontSlider.addEventListener('input', (e) => {
+            document.documentElement.style.fontSize = `${e.target.value}px`;
+            fontDisplay.textContent = `${Math.round((e.target.value / 16) * 100)}%`;
+        });
+
+        function update() {
+            let val = parseFloat(input.value);
+            if (isNaN(val) || val <= 0) {
+                convVal.textContent = '--';
+                statusBadge.style.opacity = '0';
+                needle.style.opacity = '0';
+                needleValueDisplay.style.opacity = '0';
+                return;
+            }
+
+            statusBadge.style.opacity = '1';
+            needle.style.opacity = '1';
+            needleValueDisplay.style.opacity = '1';
+
+            let mmol, mg;
+            if (mode === 'mmol') {
+                mmol = val;
+                mg = Math.round(val * FACTOR);
+                convVal.textContent = mg;
+                convUnit.textContent = 'mg/dL';
+            } else {
+                mg = val;
+                mmol = val / FACTOR;
+                convVal.textContent = mmol.toFixed(1);
+                convUnit.textContent = 'mmol/L';
+            }
+
+            let status = { label: 'NORMAL', color: 'bg-blue-600 text-white' };
+            if (mmol < 4.0) status = { label: 'LOW', color: 'bg-red-600 text-white' };
+            else if (mmol <= 7.0) status = { label: 'NORMAL', color: 'bg-blue-600 text-white' };
+            else if (mmol <= 10.0) status = { label: 'BORDERLINE', color: 'bg-emerald-600 text-white' };
+            else if (mmol <= 13.8) status = { label: 'HIGH', color: 'bg-teal-600 text-white' };
+            else status = { label: 'DANGER', color: 'bg-yellow-500 text-black' };
+
+            statusLabel.textContent = status.label;
+            statusBadge.className = `mt-6 inline-block px-10 py-3.5 rounded-full font-black dyn-lg uppercase tracking-widest border-4 transition-all duration-300 ${status.color}`;
+            
+            const pos = Math.min(Math.max((mmol / 25) * 100, 0), 96);
+            needle.style.left = `${pos}%`;
+            needleValueDisplay.textContent = `${mmol.toFixed(1)} mmol/L`;
+        }
+
+        function setManual(val) {
+            if (mode !== 'mmol') {
+                mode = 'mmol';
+                unitTypeLabel.textContent = `Current Reading (mmol/L)`;
+                activeUnitSuffix.textContent = 'mmol';
+            }
+            input.value = val;
+            update();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.getElementById('swapBtn').onclick = () => {
+            const currentRes = convVal.textContent;
+            mode = (mode === 'mmol' ? 'mg' : 'mmol');
+            unitTypeLabel.textContent = `Current Reading (${mode === 'mmol' ? 'mmol/L' : 'mg/dL'})`;
+            activeUnitSuffix.textContent = mode;
+            if (currentRes !== '--') input.value = currentRes;
+            update();
+        };
+
+        input.oninput = update;
+        document.getElementById('shareBtn').onclick = () => {
+            if (navigator.share) navigator.share({ title: 'Glucose Pro', url: window.location.href });
+        };
+        document.getElementById('downloadBtn').onclick = () => {
+            const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'index.html';
+            a.click();
+        };
+
+        window.onload = () => { lucide.createIcons(); update(); };
+    </script>
+</body>
+</html>
